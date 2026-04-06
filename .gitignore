@@ -1,0 +1,30 @@
+# Python
+.venv/
+.env/
+venv/
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+# Byte-code files
+## Compiled source
+*.py[cod]
+## C extensions
+*.so
+
+# VS Code
+.vscode/
+# Uncomment the following line to ignore the entire .vscode folder (not recommended if you share workspace settings with the team)
+# .vscode/
+
+# IDE-specific files (e.g. PyCharm)
+.idea/
+
+# Operating System files
+.DS_Store # macOS
+Thumbs.db # Windows
+
+# Sensitive information/environment variables
+.env
+
+rag-docs/
