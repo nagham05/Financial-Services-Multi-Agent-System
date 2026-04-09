@@ -70,15 +70,17 @@ app = graph.compile(checkpointer=memory)
 
 if __name__ == "__main__":
     import uuid
-    config = {"configurable": {"thread_id": str(uuid.uuid4())}}
     
     queries = [
-        "What is the total balance across all active accounts?",
-        "How many customers have overdue loans?",
-        "Show me all completed transactions"
+         "What is the total balance across all active accounts?",  # SQL
+        "What is the minimum capital requirement under Basel III?",  # RAG
+        "How many customers have overdue loans?",  # SQL
+        "What are the main vulnerabilities in the US financial system?",  # RA
     ]
     
     for query in queries:
+        config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+
         print(f"\nUser: {query}")
         print("-" * 50)
         result = app.invoke(
