@@ -8,23 +8,48 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import ToolNode, tools_condition
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from agents.sql_agent import sql_agent_node, sql_tools
-
+from agents.rag_agent import rag_agent_node
 
 
 class SupervisorState(TypedDict):
     messages: Annotated[list, add_messages] 
+    next_agent: str
+
+# simple supervisor node that routes to correct agent
+def supervisor_node(state: SupervisorState):
+    system = SystemMessage(content="""You are a supervisor that routes questions to the right agent.
+    Reply with ONLY one word:
+    - 'sql' if the question is about customer data, accounts, transactions, loans, or investments from the database
+    - 'rag' if the question is about financial regulations, reports, Basel III, Federal Reserve, JPMorgan, or conflict economics
+    """)
+    
+    response = llm.invoke([system] + state["messages"])
+    return {"next_agent": response.content.strip().lower()}
+
+def route_to_agent(state: SupervisorState):
+    return state["next_agent"]
 
 
 # build graph
 graph = StateGraph(SupervisorState)
-
+graph.add_node("supervisor", supervisor_node)
 graph.add_node("sql_agent", sql_agent_node)
 graph.add_node("sql_tools", ToolNode(sql_tools))
+graph.add_node("rag_agent", rag_agent_node)
 
-graph.add_edge(START, "sql_agent")
+graph.add_edge(START, "supervisor")
+
+graph.add_conditional_edges(
+    "supervisor",
+    route_to_agent,
+    {
+        "sql": "sql_agent",
+        "rag": "rag_agent"
+    }
+)
 
 graph.add_conditional_edges(
     "sql_agent",
@@ -36,6 +61,8 @@ graph.add_conditional_edges(
 )
 
 graph.add_edge("sql_tools", "sql_agent")
+
+graph.add_edge("rag_agent", END)
 
 memory = MemorySaver()
 app = graph.compile(checkpointer=memory)
