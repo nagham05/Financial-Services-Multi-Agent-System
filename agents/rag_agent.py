@@ -6,7 +6,7 @@ import sys
 sys.path.append("..")  # go up one level to find config.py
 
 from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
@@ -20,8 +20,14 @@ embeddings = HuggingFaceEmbeddings(
     encode_kwargs = {"normalize_embeddings": True}
 )
 
+# get the absolute path of rag_agent.py's directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# build absolute path to faiss_index
+FAISS_PATH = os.path.join(BASE_DIR, "..", "database", "faiss_index")
+
 # load the saved index
-vectorstore = FAISS.load_local("../database/faiss_index", embeddings, allow_dangerous_deserialization=True)
+vectorstore = FAISS.load_local(FAISS_PATH, embeddings, allow_dangerous_deserialization=True)
 
 # create retriever — fetch top 8 most relevant chunks
 retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
