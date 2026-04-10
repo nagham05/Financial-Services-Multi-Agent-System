@@ -12,7 +12,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from agents.sql_agent import sql_agent_node, sql_tools
 from agents.rag_agent import rag_agent_node
-
+from agents.conversation_agent import conversation_agent_node
 
 class SupervisorState(TypedDict):
     messages: Annotated[list, add_messages] 
@@ -24,6 +24,7 @@ def supervisor_node(state: SupervisorState):
     Reply with ONLY one word:
     - 'sql' if the question is about customer data, accounts, transactions, loans, or investments from the database
     - 'rag' if the question is about financial regulations, reports, Basel III, Federal Reserve, JPMorgan, or conflict economics
+    - 'conversation' if the question is about general financial concepts, definitions, explanations, or anything not covered by the above categories.
     """)
     
     response = llm.invoke([system] + state["messages"])
@@ -39,6 +40,7 @@ graph.add_node("supervisor", supervisor_node)
 graph.add_node("sql_agent", sql_agent_node)
 graph.add_node("sql_tools", ToolNode(sql_tools))
 graph.add_node("rag_agent", rag_agent_node)
+graph.add_node("conversation_agent", conversation_agent_node)
 
 graph.add_edge(START, "supervisor")
 
@@ -47,7 +49,8 @@ graph.add_conditional_edges(
     route_to_agent,
     {
         "sql": "sql_agent",
-        "rag": "rag_agent"
+        "rag": "rag_agent",
+        "conversation": "conversation_agent"
     }
 )
 
@@ -63,6 +66,7 @@ graph.add_conditional_edges(
 graph.add_edge("sql_tools", "sql_agent")
 
 graph.add_edge("rag_agent", END)
+graph.add_edge("conversation_agent", END)
 
 memory = MemorySaver()
 app = graph.compile(checkpointer=memory)
@@ -76,6 +80,8 @@ if __name__ == "__main__":
         "What is the minimum capital requirement under Basel III?",  # RAG
         "How many customers have overdue loans?",  # SQL
         "What are the main vulnerabilities in the US financial system?",  # RA
+         "What is compound interest?",                                 # conversation
+        "Explain the difference between stocks and bonds",  # conversation
     ]
     
     for query in queries:
