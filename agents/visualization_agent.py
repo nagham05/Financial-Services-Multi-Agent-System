@@ -84,13 +84,31 @@ def visualization_agent_node(state):
 
     # Step 1 — LLM generates SQL from natural language
     sql_prompt = f"""Generate a PostgreSQL query for this visualization request.
-    Available tables: customers, accounts, transactions, loans, investments.
-    Always JOIN with customers table to get customer names when relevant.
-    Return ONLY the SQL query, nothing else.
-    Request: {user_query}"""
 
+    Database schema:
+    - customers (id, name, email, country, account_type)
+    - accounts (id, customer_id, balance, currency, status) — customer_id references customers.id
+    - transactions (id, account_id, type, amount, date, status) — account_id references accounts.id
+    - loans (id, customer_id, amount, interest_rate, due_date, status) — customer_id references customers.id
+    - investments (id, customer_id, asset_name, amount_invested, current_value) — customer_id references customers.id
+
+    JOIN rules:
+    - To get customer names with accounts: JOIN customers c ON a.customer_id = c.id
+    - To get customer names with transactions: JOIN accounts a ON t.account_id = a.id JOIN customers c ON a.customer_id = c.id
+    - To get customer names with loans: JOIN customers c ON l.customer_id = c.id
+    - To get customer names with investments: JOIN customers c ON i.customer_id = c.id
+
+    Return ONLY the raw SQL query with no markdown, no backticks, no ```sql blocks.
+    Request: {user_query}"""
+    
     sql_response = llm.invoke(sql_prompt)
     sql_query = sql_response.content.strip()
+    
+    # remove markdown code blocks if LLM adds them
+    import re
+    sql_query = re.sub(r'```sql\s*', '', sql_query)
+    sql_query = re.sub(r'```\s*', '', sql_query)
+    sql_query = sql_query.strip()
 
     # Step 2 — execute SQL
     sql_result = run_sql_query(sql_query)
