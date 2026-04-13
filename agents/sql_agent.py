@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 load_dotenv("../.env")
 
 sys.path.append("..")  # go up one level to find config.py
+from utils import run_sql_query
 
 
 @tool
@@ -20,30 +21,17 @@ def execute_sql_query(query: str) -> str:
     - investments (id, customer_id, asset_name, amount_invested, current_value)
     Input must be a valid PostgreSQL query."""
 
-    try:
-        conn = psycopg2.connect(
-            host="localhost",
-            database="financial_db",
-            user="financial_user",
-            password="financial-agent"
-        )
-        cursor = conn.cursor()
-        cursor.execute(query)
-        results = cursor.fetchall()
 
-        # get column names
-        columns = [description[0] for description in cursor.description]
-        conn.close()
-
-        if not results:
-            return "No results found."
-
-        # format results with column names
-        formatted = [dict(zip(columns, row)) for row in results]
-        return str(formatted)
-    except Exception as e:
-        return f"Database error: {str(e)}"
-
+    """Use this tool to query the financial database.
+    Available tables: customers, accounts, transactions, loans, investments.
+    Input must be a valid PostgreSQL query."""
+    
+    result = run_sql_query(query)
+    if isinstance(result, str):
+        return result
+    if not result:
+        return "No results found."
+    return str(result)
 
 def sql_agent_node(state):
     system_prompt = SystemMessage(content=

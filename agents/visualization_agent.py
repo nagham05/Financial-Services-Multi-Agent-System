@@ -6,11 +6,11 @@ load_dotenv("../.env")
 
 sys.path.append("..")
 from config import llm
-from agents.sql_agent import execute_sql_query
 import matplotlib
 matplotlib.use('Agg')  # non-interactive backend for saving files
 import matplotlib.pyplot as plt
 from langchain_core.messages import AIMessage
+from utils import run_sql_query
 
 def generate_chart(user_query, sql_result):
     if not sql_result or sql_result == "No results found.":
@@ -93,7 +93,7 @@ def visualization_agent_node(state):
     sql_query = sql_response.content.strip()
 
     # Step 2 — execute SQL
-    sql_result = execute_sql_query(sql_query)
+    sql_result = run_sql_query(sql_query)
 
     if isinstance(sql_result, str) and "error" in sql_result.lower():
         return {"messages": [AIMessage(content=f"Database error: {sql_result}")]}
