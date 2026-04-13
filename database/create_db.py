@@ -108,17 +108,15 @@ def create_db():
 
     # Insert sample data into transactions table
     cursor.execute("""
-    INSERT INTO transactions (account_id, type, amount, status) VALUES
-    (1, 'deposit', 2000.00, 'completed'),
-    (2, 'withdrawal', 500.00, 'completed'),
-    (3, 'transfer', 1000.00, 'pending'),
-    (4, 'deposit', 3000.00, 'completed'),
-    (5, 'withdrawal', 2000.00, 'failed'),
-    (6, 'transfer', 1500.00, 'completed'),
-    (7, 'deposit', 4000.00, 'completed'),
-    (8, 'withdrawal', 2500.00, 'pending')
-
-
+    INSERT INTO transactions (account_id, type, amount, date, status) VALUES
+    (1, 'deposit', 2000.00, '2025-10-15', 'completed'),
+    (2, 'withdrawal', 500.00, '2025-11-20', 'completed'),
+    (3, 'transfer', 1000.00, '2025-11-25', 'pending'),
+    (4, 'deposit', 3000.00, '2025-12-10', 'completed'),
+    (5, 'withdrawal', 2000.00, '2025-12-20', 'failed'),
+    (6, 'transfer', 1500.00, '2026-01-15', 'completed'),
+    (7, 'deposit', 4000.00, '2026-02-10', 'completed'),
+    (8, 'withdrawal', 2500.00, '2026-03-05', 'pending');
     """)
 
     # Insert sample data into loans table
