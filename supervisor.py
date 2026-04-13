@@ -81,11 +81,13 @@ if __name__ == "__main__":
     import uuid
     
     queries = [
-        "What is the total balance across all active accounts?",          # sql
-        "What is the minimum capital requirement under Basel III?",        # rag
-        "What is compound interest?",                                      # conversation
-        "Show me a bar chart of account balances by customer",            # visualization
-         "Create a line graph of monthly transaction volumes for the past year."  # visualization
+        # "What is the total balance across all active accounts?",          # sql
+        # "What is the minimum capital requirement under Basel III?",        # rag
+        # "What is compound interest?",                                      # conversation
+        # "Show me a bar chart of account balances by customer",            # visualization
+        #  "Create a line graph of monthly transaction volumes for the past year." , # visualization
+        #  "Show me a line chart of loan amounts by customer"
+        "Show me a pie chart of loan status distribution"
     ]
     
     for query in queries:
