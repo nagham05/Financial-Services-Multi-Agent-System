@@ -14,6 +14,7 @@ from agents.sql_agent import sql_agent_node, sql_tools
 from agents.rag_agent import rag_agent_node
 from agents.conversation_agent import conversation_agent_node
 from agents.visualization_agent import visualization_agent_node
+from agents.web_search_team.sub_supervisor import web_research_node
 
 class SupervisorState(TypedDict):
     messages: Annotated[list, add_messages] 
@@ -27,6 +28,7 @@ def supervisor_node(state: SupervisorState):
     - 'rag' if the question is about financial regulations, reports, Basel III, Federal Reserve, JPMorgan, or conflict economics
     - 'conversation' if the question is about general financial concepts, definitions, explanations, or anything not covered by the above categories.
     - 'visualization' if the user is asking for a chart, graph, or visualization of financial data.
+    - 'web_research' if the question is about current financial news, market trends, or any information that would require up-to-date web research.
     """)
     
     response = llm.invoke([system] + state["messages"])
@@ -44,6 +46,7 @@ graph.add_node("sql_tools", ToolNode(sql_tools))
 graph.add_node("rag_agent", rag_agent_node)
 graph.add_node("conversation_agent", conversation_agent_node)
 graph.add_node("visualization_agent", visualization_agent_node)
+graph.add_node("web_research", web_research_node)
 
 graph.add_edge(START, "supervisor")
 
@@ -54,7 +57,8 @@ graph.add_conditional_edges(
         "sql": "sql_agent",
         "rag": "rag_agent",
         "conversation": "conversation_agent",
-        "visualization": "visualization_agent"
+        "visualization": "visualization_agent",
+        "web_research": "web_research"
     }
 )
 
@@ -72,6 +76,7 @@ graph.add_edge("sql_tools", "sql_agent")
 graph.add_edge("rag_agent", END)
 graph.add_edge("conversation_agent", END)
 graph.add_edge("visualization_agent", END)
+graph.add_edge("web_research", END)
 
 memory = MemorySaver()
 app = graph.compile(checkpointer=memory)
@@ -87,7 +92,10 @@ if __name__ == "__main__":
         # "Show me a bar chart of account balances by customer",            # visualization
         #  "Create a line graph of monthly transaction volumes for the past year." , # visualization
         #  "Show me a line chart of loan amounts by customer"
-        "Show me a pie chart of loan status distribution"
+        #"Show me a pie chart of loan status distribution"
+        "What are the latest news about the Federal Reserve interest rates?", # web search
+        "What are the latest trends in AI investment in 2025?",
+        "What is the current price of gold?"
     ]
     
     for query in queries:
