@@ -23,13 +23,15 @@ class SupervisorState(TypedDict):
 # simple supervisor node that routes to correct agent
 def supervisor_node(state: SupervisorState):
     system = SystemMessage(content="""You are a supervisor that routes questions to the right agent.
-    Reply with ONLY one word:
-    - 'sql' if the question is about customer data, accounts, transactions, loans, or investments from the database
-    - 'rag' if the question is about financial regulations, reports, Basel III, Federal Reserve, JPMorgan, or conflict economics
-    - 'conversation' if the question is about general financial concepts, definitions, explanations, or anything not covered by the above categories.
-    - 'visualization' if the user is asking for a chart, graph, or visualization of financial data.
-    - 'web_research' if the question is about current financial news, market trends, or any information that would require up-to-date web research.
-    """)
+        Reply with ONLY one word:
+        - 'sql' if the question is about querying specific data from the database (counts, totals, lists, lookups)
+        - 'rag' if the question is about financial regulations, reports, Basel III, Federal Reserve, JPMorgan, or conflict economics
+        - 'conversation' if the question is about general financial concepts, definitions, or explanations
+        - 'visualization' if the question explicitly mentions a chart, graph, plot, pie chart, bar chart, line chart, or any visual representation of data
+        - 'web_research' if the question asks about current events, latest news, live prices, or recent trends
+
+        IMPORTANT: If the user mentions ANY visual format (chart, graph, plot, visualization), ALWAYS route to 'visualization' regardless of the data type.
+        """)
     
     response = llm.invoke([system] + state["messages"])
     return {"next_agent": response.content.strip().lower()}
@@ -81,31 +83,37 @@ graph.add_edge("web_research", END)
 memory = MemorySaver()
 app = graph.compile(checkpointer=memory)
 
+ 
+#         "What is the total balance across all active accounts?",          # sql
+#         "What is the minimum capital requirement under Basel III?",        # rag
+#         "What is compound interest?",                                      # conversation
+#         "Show me a bar chart of account balances by customer",            # visualization
+#         "Create a line graph of monthly transaction volumes for the past year." , # visualization
+#         "Show me a line chart of loan amounts by customer"
+#         #"Show me a pie chart of loan status distribution"
+#         "What are the latest news about the Federal Reserve interest rates?", # web search
+#         "What are the latest trends in AI investment in 2025?",
+#         "What is the current price of gold?"
+    
 
 if __name__ == "__main__":
     import uuid
     
-    queries = [
-        # "What is the total balance across all active accounts?",          # sql
-        # "What is the minimum capital requirement under Basel III?",        # rag
-        # "What is compound interest?",                                      # conversation
-        # "Show me a bar chart of account balances by customer",            # visualization
-        #  "Create a line graph of monthly transaction volumes for the past year." , # visualization
-        #  "Show me a line chart of loan amounts by customer"
-        #"Show me a pie chart of loan status distribution"
-        "What are the latest news about the Federal Reserve interest rates?", # web search
-        "What are the latest trends in AI investment in 2025?",
-        "What is the current price of gold?"
-    ]
     
-    for query in queries:
-        config = {"configurable": {"thread_id": str(uuid.uuid4())}}
+    while True:
+        thread_id = str(uuid.uuid4())  # one thread per conversation
+        config = {"configurable": {"thread_id": thread_id}}
 
-        print(f"\nUser: {query}")
-        print("-" * 50)
+        user_input = input("User: ").strip()
+        if user_input.lower() in ["exit", "quit"]:
+            print("Exiting the agent. Goodbye!")
+            break
+        
+        if not user_input:
+            continue
+        
         result = app.invoke(
-            {"messages": [HumanMessage(content=query)]},
+            {"messages": [HumanMessage(content=user_input)], "query": user_input},
             config=config
         )
-        print(f"Agent: {result['messages'][-1].content}")
-        print("=" * 50)
+        print(f"Agent: {result['messages'][-1].content}\n")
