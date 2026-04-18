@@ -5,11 +5,11 @@ load_dotenv("../.env")
 sys.path.append("..")
 
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_community.tools import DuckDuckGoSearchRun
+from langchain_community.utilities import SerpAPIWrapper
 from config import llm
 from concurrent.futures import ThreadPoolExecutor
 
-web_search = DuckDuckGoSearchRun(backend="lite")
+web_search = SerpAPIWrapper()
 
 def researcher_node(state):
     research_query = state["research_query"]
