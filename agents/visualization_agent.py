@@ -12,6 +12,8 @@ import matplotlib.pyplot as plt
 from langchain_core.messages import AIMessage
 from utils import run_sql_query
 
+# This function generates a chart based on the SQL results and the user's original query. 
+# It uses the LLM to determine the best chart type and which columns to use for the axes, then creates and saves the chart using matplotlib.
 def generate_chart(user_query, sql_result):
     if not sql_result or sql_result == "No results found.":
         return "No data available to generate chart."
@@ -78,7 +80,9 @@ def generate_chart(user_query, sql_result):
 
     return chart_path
 
-
+# This is the main function for the visualization agent. 
+# It takes the user's natural language query, generates a SQL query using the LLM, executes it against the database, 
+# and then generates a chart based on the results.
 def visualization_agent_node(state):
     user_query = state["messages"][-1].content
 
