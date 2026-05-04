@@ -30,7 +30,10 @@ def supervisor_node(state: SupervisorState):
         - 'visualization' if the question explicitly mentions a chart, graph, plot, pie chart, bar chart, line chart, or any visual representation of data
         - 'web_research' if the question asks about current events, latest news, live prices, or recent trends
 
-        IMPORTANT: If the user mentions ANY visual format (chart, graph, plot, visualization), ALWAYS route to 'visualization' regardless of the data type.
+        IMPORTANT:
+            -  If the user mentions ANY visual format (chart, graph, plot, visualization), ALWAYS route to 'visualization' regardless of the data type.
+            - If the question is about war, conflict, or geopolitical effects on economy → ALWAYS route to 'rag'
+
         """)
     
     response = llm.invoke([system] + state["messages"])
