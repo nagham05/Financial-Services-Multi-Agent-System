@@ -1,11 +1,10 @@
 import os
 import uuid
+import threading
+import http.server
+import socketserver
 from dotenv import load_dotenv
 load_dotenv()
-
-os.environ["LANGSMITH_TRACING"] = "true"
-os.environ["LANGSMITH_API_KEY"] = os.getenv("LANGSMITH_API_KEY")
-os.environ["LANGCHAIN_PROJECT"] = "financial-multi-agent"
 
 import chainlit as cl
 from langchain_core.messages import HumanMessage
@@ -19,6 +18,16 @@ AGENT_CONFIG = {
     "visualization":{"emoji": "📊",  "name": "Visualization Agent", "status": "Generating chart..."},
     "web_research": {"emoji": "🌐",  "name": "Web Research Team",   "status": "Searching the web..."},
 }
+
+def start_chart_server():
+    handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", 8080), handler) as httpd:
+        httpd.serve_forever()
+
+@cl.on_app_startup
+async def startup():
+    thread = threading.Thread(target=start_chart_server, daemon=True)
+    thread.start()
 
 @cl.on_chat_start
 async def start():
@@ -56,38 +65,15 @@ async def main(message: cl.Message):
 
     # check if response is a chart path
     if "charts/" in response and ".html" in response:
-        # extract the chart path
-        chart_path = response.split("charts/")[1].split(" ")[0]
-        chart_path = f"charts/{chart_path}"
-        
-        # read the HTML file
-        try:
-            with open(chart_path, "r") as f:
-                html_content = f.read()
-            
-            # send agent badge
-            await cl.Message(
-                content=f"**{agent['emoji']} {agent['name']}**"
-            ).send()
-            
-            # render chart inline as HTML element
-            await cl.Message(
-                content=html_content,
-                elements=[
-                    cl.Text(
-                        name="chart",
-                        content=html_content,
-                        display="inline"
-                    )
-                ]
-            ).send()
-            
-        except Exception as e:
-            await cl.Message(
-                content=f"**{agent['emoji']} {agent['name']}**\n\nChart generated but could not display inline. Error: {str(e)}"
-            ).send()
+            import re
+            match = re.search(r'charts/[^\s]+\.html', response)
+            if match:
+                chart_path = match.group(0)
+                chart_url = f"http://localhost:8080/{chart_path}"
+                await cl.Message(
+                    content=f"**{agent['emoji']} {agent['name']}**\n\n📊 Chart ready! [Click here to view]({chart_url})"
+                ).send()
     else:
-        # normal text response
         await cl.Message(
             content=f"**{agent['emoji']} {agent['name']}**\n\n{response}"
-        ).send()
+            ).send()
