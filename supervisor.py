@@ -33,6 +33,9 @@ def supervisor_node(state: SupervisorState):
         IMPORTANT:
             -  If the user mentions ANY visual format (chart, graph, plot, visualization), ALWAYS route to 'visualization' regardless of the data type.
             - If the question is about war, conflict, or geopolitical effects on economy → ALWAYS route to 'rag'
+            - If unsure between sql and conversation → choose 'conversation'
+            - If the question is vague but mentions financial concepts → choose 'conversation'
+            - If the question is vague but seems to ask for specific data → choose 'sql'
 
         """)
     
