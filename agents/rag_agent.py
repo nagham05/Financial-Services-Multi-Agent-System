@@ -32,32 +32,47 @@ vectorstore = FAISS.load_local(FAISS_PATH, embeddings, allow_dangerous_deseriali
 # create retriever — fetch top 8 most relevant chunks
 retriever = vectorstore.as_retriever(search_kwargs={"k": 8})
 
+# docs names and links for citation in answers
+DOCUMENT_NAMES = {
+    "jpmorgan_annual_report_2023": "JPMorgan Chase Annual Report 2023",
+    "fed_financial_stability_2024": "Federal Reserve Financial Stability Report 2024",
+    "basel_iii_framework": "Basel III Framework (BIS)",
+    "imf_macroeconomic_costs_conflict": "IMF — Macroeconomic Costs of Conflict",
+    "imf_geopolitical_risks_2025": "IMF — Geopolitical Risks 2025"
+}
+
+DOCUMENT_LINKS = {
+    "jpmorgan_annual_report_2023": "https://www.jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/annualreport-2023.pdf",
+    "fed_financial_stability_2024": "https://www.federalreserve.gov/publications/files/financial-stability-report-20241122.pdf",
+    "basel_iii_framework": "https://www.bis.org/publ/bcbs189.pdf",
+    "imf_macroeconomic_costs_conflict": "https://www.imf.org/-/media/files/publications/wp/2020/english/wpiea2020110-print-pdf.ashx",
+    "imf_geopolitical_risks_2025": "https://www.imf.org/-/media/files/publications/gfsr/2025/april/english/ch2.pdf"
+}
+
 # Define the prompt template
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", """You are a senior financial analyst assistant. Answer questions using ONLY the provided context from financial documents.
+prompt = ChatPromptTemplate.from_messages([
+    ("system", """You are a senior financial analyst assistant. Answer questions using ONLY the provided context from financial documents.
 
-        Guidelines:
-        - Use ALL provided context to answer, even if the answer requires combining information from multiple documents
-        - Only synthesize across documents when there is EXPLICIT evidence in BOTH sources — never infer relationships that are not directly stated
-        - If the answer requires inference rather than direct quotes, prefix with "Based on available context, it appears that..."
-        - If the answer truly cannot be found or inferred from the context, say 'I could not find this in the provided documents.'
-        - Always cite which document your answer comes from using the document name in brackets
-        - Include specific numbers, percentages, and figures when available
-        - Never make up financial data or statistics
-        - If combining information from multiple documents, clearly state which fact came from which document
-        - Keep answers professional and concise
+    Guidelines:
+    - Use ALL provided context to answer
+    - Only synthesize across documents when there is EXPLICIT evidence in BOTH sources
+    - If the answer requires inference, prefix with "Based on available context, it appears that..."
+    - If not found, say 'I could not find this in the provided documents.'
+    - Always cite which document your answer comes from using the full document name
+    - Include specific numbers, percentages, and figures when available
+    - Never make up financial data or statistics
 
-        Context: {context}"""),
-                ("human", "{question}")
-    ]
-)
+    Context: {context}"""),
+        ("human", "{question}")
+])
 
 
 # Helper function to format retrieved documents for the prompt
 def format_docs(docs):
-    return "\n\n".join([f"[{doc.metadata.get('topic', 'unknown')}]\n{doc.page_content}" for doc in docs])
-
+    return "\n\n".join([
+        f"[{DOCUMENT_NAMES.get(doc.metadata.get('topic', 'unknown'), doc.metadata.get('topic', 'unknown'))}]\n{doc.page_content}" 
+        for doc in docs
+    ])
 
 # Build the RAG chain
 chain = (
