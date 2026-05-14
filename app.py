@@ -9,7 +9,7 @@ load_dotenv()
 import chainlit as cl
 from langchain_core.messages import HumanMessage
 from supervisor import app
-
+from agents.rag_agent import DOCUMENT_NAMES, DOCUMENT_LINKS
 # agent display config
 AGENT_CONFIG = {
     "sql":          {"emoji": "🗄️",  "name": "SQL Agent",          "status": "Querying financial database..."},
@@ -81,17 +81,25 @@ async def main(message: cl.Message):
     # get final response
     response = result["messages"][-1].content
 
-    # check if response is a chart path
     if "charts/" in response and ".html" in response:
-            import re
-            match = re.search(r'charts/[^\s]+\.html', response)
-            if match:
-                chart_path = match.group(0)
-                chart_url = f"http://localhost:8080/{chart_path}"
-                await cl.Message(
-                    content=f"**{agent['emoji']} {agent['name']}**\n\n📊 Chart ready! [Click here to view]({chart_url})"
-                ).send()
+        import re
+        match = re.search(r'charts/[^\s]+\.html', response)
+        if match:
+            chart_path = match.group(0)
+            chart_url = f"http://localhost:8080/{chart_path}"
+            await cl.Message(
+                content=f"**{actual_agent['emoji']} {actual_agent['name']}**\n\n📊 Chart ready! [Click here to view]({chart_url})"
+            ).send()
+    elif actual_agent_key == "rag":
+        # add source links at the bottom
+        source_links = "\n\n**📄 Sources:**\n"
+        for key, name in DOCUMENT_NAMES.items():
+            if key in response.lower() or name.lower() in response.lower():
+                source_links += f"- [{name}]({DOCUMENT_LINKS[key]})\n"
+        await cl.Message(
+            content=f"**{actual_agent['emoji']} {actual_agent['name']}**\n\n{response}{source_links}"
+        ).send()
     else:
         await cl.Message(
-            content=f"**{agent['emoji']} {agent['name']}**\n\n{response}"
-            ).send()
+            content=f"**{actual_agent['emoji']} {actual_agent['name']}**\n\n{response}"
+        ).send()
