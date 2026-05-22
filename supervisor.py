@@ -23,20 +23,27 @@ class SupervisorState(TypedDict):
 # simple supervisor node that routes to correct agent
 def supervisor_node(state: SupervisorState):
     system = SystemMessage(content="""You are a supervisor that routes questions to the right agent.
-        Reply with ONLY one word:
-        - 'sql' if the question is about querying specific data from the database (counts, totals, lists, lookups)
-        - 'rag' if the question is about financial regulations, reports, Basel III, Federal Reserve, JPMorgan, or conflict economics
-        - 'conversation' if the question is about general financial concepts, definitions, or explanations
-        - 'visualization' if the question explicitly mentions a chart, graph, plot, pie chart, bar chart, line chart, or any visual representation of data
-        - 'web_research' if the question asks about current events, latest news, live prices, or recent trends
+        Reply with ONLY one word — no punctuation, no explanation.
 
-        IMPORTANT:
-            -  If the user mentions ANY visual format (chart, graph, plot, visualization), ALWAYS route to 'visualization' regardless of the data type.
-            - If the question is about war, conflict, or geopolitical effects on economy → ALWAYS route to 'rag'
-            - If unsure between sql and conversation → choose 'conversation'
-            - If the question is vague but mentions financial concepts → choose 'conversation'
-            - If the question is vague but seems to ask for specific data → choose 'sql'
+        Agents:
+        - 'sql'          → the user wants specific data from the database: a number, a list, a lookup, a count, a total, a ranking.
+                           Examples: "who has the highest loan?", "list all active accounts", "how many customers are in the US?"
+        - 'rag'          → the question is about financial regulations, frameworks, or documents: Basel III, Federal Reserve reports, JPMorgan annual report, IMF, conflict economics.
+                           Examples: "what does Basel III say about capital buffers?", "Fed funding risk assessment", "economic impact of war"
+        - 'conversation' → the user is asking for a definition, explanation, or concept in general finance — NOT about our database.
+                           Examples: "what is a bear market?", "explain compound interest", "what is inflation?", "how does a hedge fund work?"
+        - 'visualization'→ the user explicitly asks for a chart, graph, plot, or visual representation of data.
+                           Examples: "pie chart of customers by region", "bar chart of loan amounts", "show me a graph of balances"
+        - 'web_research' → the user wants current/live information: prices, news, recent events, today's rates.
+                           Examples: "gold price today", "latest Fed interest rate decision", "recent news about Tesla"
 
+        STRICT RULES — follow these exactly:
+        1. If the question asks "what is X", "explain X", "define X", or "how does X work" for any financial concept → ALWAYS 'conversation'. Never 'sql'.
+        2. If the question mentions ANY visual format (chart, graph, plot, pie, bar, line) → ALWAYS 'visualization'.
+        3. If the question is about war, conflict, geopolitical risk, or named financial documents/frameworks → ALWAYS 'rag'.
+        4. If the question asks for live/current data or news → ALWAYS 'web_research'.
+        5. Only use 'sql' when the user clearly wants a specific value or list FROM THE DATABASE.
+        6. When in doubt → 'conversation'.
         """)
     
     response = llm.invoke([system] + state["messages"])
@@ -74,7 +81,7 @@ graph.add_conditional_edges(
     "sql_agent",
     tools_condition,
     {
-        "tools": "sql_tools",  # map default "tools" to your "sql_tools" node
+        "tools": "sql_tools",
         END: END
     }
 )
@@ -89,25 +96,12 @@ graph.add_edge("web_research", END)
 memory = MemorySaver()
 app = graph.compile(checkpointer=memory)
 
- 
-#         "What is the total balance across all active accounts?",          # sql
-#         "What is the minimum capital requirement under Basel III?",        # rag
-#         "What is compound interest?",                                      # conversation
-#         "Show me a bar chart of account balances by customer",            # visualization
-#         "Create a line graph of monthly transaction volumes for the past year." , # visualization
-#         "Show me a line chart of loan amounts by customer"
-#         #"Show me a pie chart of loan status distribution"
-#         "What are the latest news about the Federal Reserve interest rates?", # web search
-#         "What are the latest trends in AI investment in 2025?",
-#         "What is the current price of gold?"
-    
 
 if __name__ == "__main__":
     import uuid
     
-    
     while True:
-        thread_id = str(uuid.uuid4())  # one thread per conversation
+        thread_id = str(uuid.uuid4())
         config = {"configurable": {"thread_id": thread_id}}
 
         user_input = input("User: ").strip()
