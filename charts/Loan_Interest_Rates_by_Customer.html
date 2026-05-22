@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Loan Interest Rates by Customer</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .chart-container { width: 800px; height: 500px; margin: auto; }
+        h2 { text-align: center; color: #333; }
+    </style>
+</head>
+<body>
+    <h2>Loan Interest Rates by Customer</h2>
+    <div class="chart-container">
+        <canvas id="myChart"></canvas>
+    </div>
+    <script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Charlie Brown', 'Fiona Gallagher', 'Alice Smith', 'George Martin', 'Bob Johnson', 'Ethan Hunt', 'Hannah Lee', 'Diana Prince'],
+                datasets: [{
+                    label: 'Loan Interest Rates by Customer',
+                    data: [6.0, 5.5, 5.0, 4.75, 4.5, 4.25, 3.9, 3.75],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 99, 132, 0.6)',
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(153, 102, 255, 0.6)',
+                        'rgba(255, 159, 64, 0.6)',
+                        'rgba(199, 199, 199, 0.6)',
+                        'rgba(83, 102, 255, 0.6)'
+                    ],
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Loan Interest Rates by Customer'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
