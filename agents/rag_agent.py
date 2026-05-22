@@ -88,3 +88,5 @@ def rag_agent_node(state):
     response = chain.invoke(question)
     return {"messages": [AIMessage(content=response)]}
 
+vectorstore = vectorstore  # expose for testing and potential future use
+
