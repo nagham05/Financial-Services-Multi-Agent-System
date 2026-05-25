@@ -1,6 +1,6 @@
 # Financial Services Multi-Agent System
 
-A hierarchical AI assistant for financial services built with LangGraph, featuring 7 specialized agents coordinated by a central supervisor. The system handles database queries, document retrieval, web research, data visualization, uploaded document Q&A, and general financial Q&A through a single conversational interface powered by a ChainLit UI.
+AI assistant for financial services built with LangGraph, featuring 7 specialized agents coordinated by a central supervisor. The system handles database queries, document retrieval, web research, data visualization, uploaded document Q&A, and general financial Q&A through a single conversational interface powered by a ChainLit UI.
 
 ---
 
@@ -18,7 +18,7 @@ User Query / Uploaded PDF
 app.py (ChainLit UI — pre-routing + upload detection)
     ↓
 ┌──────────────────────────────────────────────────────────────┐
-│  Document QA Agent  → user-uploaded financial PDFs           │  ← handled directly in app.py (bypasses supervisor)
+│  Document QA Agent  → user-uploaded financial PDFs           │  
 └──────────────────────────────────────────────────────────────┘
     ↓ (if no upload)
 Main Supervisor (routes to correct agent)
